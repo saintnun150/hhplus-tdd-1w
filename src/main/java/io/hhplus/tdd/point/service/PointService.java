@@ -1,5 +1,6 @@
 package io.hhplus.tdd.point.service;
 
+import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.point.repository.PointHistoryRepository;
@@ -7,6 +8,8 @@ import io.hhplus.tdd.point.repository.UserPointRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -42,5 +45,13 @@ public class PointService {
         pointHistoryRepository.createPointHistory(id, amount, TransactionType.USE, System.currentTimeMillis());
 
         return userPointRepository.createOrUpdate(id, userPoint.point() - amount);
+    }
+
+    public UserPoint getUserPoint(long id) {
+        return userPointRepository.getUserPoint(id);
+    }
+
+    public List<PointHistory> getUserPointHistories(long id) {
+        return pointHistoryRepository.getUserHistories(id);
     }
 }
