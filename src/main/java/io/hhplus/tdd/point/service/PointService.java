@@ -25,4 +25,22 @@ public class PointService {
         UserPoint userPoint = userPointRepository.getUserPoint(id);
         return userPointRepository.createOrUpdate(id, userPoint.point() + amount);
     }
+
+    public UserPoint usePoint(long id, long amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("amount must be greater than 0");
+        }
+
+        UserPoint userPoint = userPointRepository.getUserPoint(id);
+        if (userPoint.point() == 0) {
+            throw new IllegalStateException("current point is zero");
+        }
+        if (userPoint.point() < amount) {
+            throw new IllegalStateException("current point is less than amount");
+        }
+
+        pointHistoryRepository.createPointHistory(id, amount, TransactionType.USE, System.currentTimeMillis());
+
+        return userPointRepository.createOrUpdate(id, userPoint.point() - amount);
+    }
 }
