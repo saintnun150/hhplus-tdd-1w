@@ -1,9 +1,9 @@
 package io.hhplus.tdd.point.service;
 
-import io.hhplus.tdd.database.PointHistoryTable;
-import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.repository.UserPointRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,10 +22,10 @@ import static org.mockito.Mockito.when;
 class PointServiceTest {
 
     @Mock
-    private UserPointTable userPointTable;
+    private UserPointRepository userPointRepository;
 
     @Mock
-    private PointHistoryTable pointHistoryTable;
+    private PointHistoryRepository pointHistoryRepository;
 
     @InjectMocks
     private PointService pointService;
@@ -54,9 +54,9 @@ class PointServiceTest {
 
         UserPoint expectUserPoint = new UserPoint(id, point, System.currentTimeMillis());
 
-        when(userPointTable.selectById(id))
+        when(userPointRepository.getUserPoint(id))
                 .thenReturn(UserPoint.empty(id));
-        when(userPointTable.insertOrUpdate(id, point))
+        when(userPointRepository.createOrUpdate(id, point))
                 .thenReturn(expectUserPoint);
 
         UserPoint actual = pointService.chargePoint(id, point);
@@ -76,9 +76,9 @@ class PointServiceTest {
 
         long totalAmount = currentPoint + extraChargeAmount;
 
-        when(userPointTable.selectById(id))
+        when(userPointRepository.getUserPoint(id))
                 .thenReturn(alreadyUserPoint);
-        when(userPointTable.insertOrUpdate(id, totalAmount))
+        when(userPointRepository.createOrUpdate(id, totalAmount))
                 .thenReturn(new UserPoint(id, totalAmount, System.currentTimeMillis()));
 
         UserPoint actual = pointService.chargePoint(id, extraChargeAmount);
@@ -95,13 +95,13 @@ class PointServiceTest {
         long currentPoint = 100L;
         long extraChargeAmount = 200L;
 
-        when(userPointTable.selectById(id))
+        when(userPointRepository.getUserPoint(id))
                 .thenReturn(new UserPoint(id, currentPoint, System.currentTimeMillis()));
 
         pointService.chargePoint(id, extraChargeAmount);
 
         // 충전 기록 호출 확인
-        verify(pointHistoryTable).insert(eq(id), eq(extraChargeAmount), eq(TransactionType.CHARGE), anyLong());
+        verify(pointHistoryRepository).createPointHistory(eq(id), eq(extraChargeAmount), eq(TransactionType.CHARGE), anyLong());
     }
 
 

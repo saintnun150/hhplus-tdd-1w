@@ -1,9 +1,9 @@
 package io.hhplus.tdd.point.service;
 
-import io.hhplus.tdd.database.PointHistoryTable;
-import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.repository.PointHistoryRepository;
+import io.hhplus.tdd.point.repository.UserPointRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,17 +12,17 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class PointService {
-    private final UserPointTable userPointTable;
-    private final PointHistoryTable pointHistoryTable;
+    private final UserPointRepository userPointRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     public UserPoint chargePoint(long id, long amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("amount must be greater than 0");
         }
 
-        pointHistoryTable.insert(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
+        pointHistoryRepository.createPointHistory(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
 
-        UserPoint userPoint = userPointTable.selectById(id);
-        return userPointTable.insertOrUpdate(id, userPoint.point() + amount);
+        UserPoint userPoint = userPointRepository.getUserPoint(id);
+        return userPointRepository.createOrUpdate(id, userPoint.point() + amount);
     }
 }
