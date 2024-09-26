@@ -3,6 +3,7 @@ package io.hhplus.tdd.point.service;
 import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.constraint.PointValidator;
 import io.hhplus.tdd.point.repository.PointHistoryRepository;
 import io.hhplus.tdd.point.repository.UserPointRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,10 +19,11 @@ public class PointService {
     private final UserPointRepository userPointRepository;
     private final PointHistoryRepository pointHistoryRepository;
 
+    private final PointValidator pointValidator;
+
     public UserPoint chargePoint(long id, long amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("amount must be greater than 0");
-        }
+        // 충전 정책 체크
+        pointValidator.chargePointCheck(amount);
 
         pointHistoryRepository.createPointHistory(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
 
@@ -30,20 +32,10 @@ public class PointService {
     }
 
     public UserPoint usePoint(long id, long amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("amount must be greater than 0");
-        }
-
         UserPoint userPoint = userPointRepository.getUserPoint(id);
-        if (userPoint.point() == 0) {
-            throw new IllegalStateException("current point is zero");
-        }
-        if (userPoint.point() < amount) {
-            throw new IllegalStateException("current point is less than amount");
-        }
-
+        // 사용 정책 체크
+        pointValidator.usePointCheck(amount, userPoint.point());
         pointHistoryRepository.createPointHistory(id, amount, TransactionType.USE, System.currentTimeMillis());
-
         return userPointRepository.createOrUpdate(id, userPoint.point() - amount);
     }
 
