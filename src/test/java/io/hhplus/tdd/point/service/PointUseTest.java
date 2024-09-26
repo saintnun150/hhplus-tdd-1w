@@ -2,6 +2,8 @@ package io.hhplus.tdd.point.service;
 
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.concurrent.PointLock;
+import io.hhplus.tdd.point.concurrent.PointLockManager;
 import io.hhplus.tdd.point.constraint.PointValidator;
 import io.hhplus.tdd.point.exception.PointErrorCode;
 import io.hhplus.tdd.point.exception.PointException;
@@ -13,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,16 +41,25 @@ class PointUseTest {
     @Mock
     private PointValidator pointValidator;
 
+    @Mock
+    private PointLock pointLock;
+
+    @Mock
+    private PointLockManager lockManager;
+
     @InjectMocks
     private PointService pointService;
 
-
     @DisplayName("해당 유저의 포인트가 충분하지 않으면 PointErrorCode INSUFFICIENT_POINT_AMOUNT 반환한다.")
     @Test
-    void throwExceptionWhenNotFoundUserPoint() {
+    void throwExceptionWhenNotFoundUserPoint() throws InterruptedException {
         long userId = 1;
         long amount = 100;
         long currentPoint = 50;
+
+        // lock 모킹
+        when(lockManager.getLock(anyString())).thenReturn(pointLock);
+        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
@@ -65,11 +78,15 @@ class PointUseTest {
 
     @DisplayName("사용하려는 포인트가 0이하일 경우 PointErrorCode INVALID_POINT_AMOUNT 반환한다")
     @Test
-    void throwExceptionWhenUsingPointGreaterThanCurrentPoint() {
+    void throwExceptionWhenUsingPointGreaterThanCurrentPoint() throws InterruptedException {
         long userId = 1;
         long currentPoint = 100;
         long amount = 200;
         long negativeAmount = -10;
+
+        // lock 모킹
+        when(lockManager.getLock(anyString())).thenReturn(pointLock);
+        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
@@ -88,11 +105,15 @@ class PointUseTest {
 
     @DisplayName("정상적으로 포인트를 사용했을 때 남은 포인트가 일치해야한다.")
     @Test
-    void equalRemainPointWhenUsingPointIsNormal() {
+    void equalRemainPointWhenUsingPointIsNormal() throws InterruptedException {
         long userId = 1;
         long currentPoint = 500;
         long amount = 200;
         long remainPoint = 300;
+
+        // lock 모킹
+        when(lockManager.getLock(anyString())).thenReturn(pointLock);
+        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
@@ -108,11 +129,15 @@ class PointUseTest {
 
     @DisplayName("포인트를 사용할 경우 포인트 이용 내역이 기록되어야 한다.")
     @Test
-    void createPointUsingHistory() {
+    void createPointUsingHistory() throws InterruptedException {
         long userId = 1;
         long currentPoint = 500;
         long amount = 200;
         long remainPoint = 300;
+
+        // lock 모킹
+        when(lockManager.getLock(anyString())).thenReturn(pointLock);
+        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));

@@ -2,6 +2,8 @@ package io.hhplus.tdd.point.service;
 
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.concurrent.PointLock;
+import io.hhplus.tdd.point.concurrent.PointLockManager;
 import io.hhplus.tdd.point.constraint.PointValidator;
 import io.hhplus.tdd.point.exception.PointErrorCode;
 import io.hhplus.tdd.point.exception.PointException;
@@ -13,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,6 +36,12 @@ class PointChargeTest {
     @Mock
     private PointValidator pointValidator;
 
+    @Mock
+    private PointLock pointLock;
+
+    @Mock
+    private PointLockManager lockManager;
+
     @InjectMocks
     private PointService pointService;
 
@@ -42,6 +52,9 @@ class PointChargeTest {
         long zeroPoint = 0;
         long negativePoint = -100;
         long limitedPoint = 20000;
+
+        // lock 모킹
+        when(lockManager.getLock(anyString())).thenReturn(pointLock);
 
         doThrow(new PointException(PointErrorCode.INVALID_POINT_AMOUNT))
                 .when(pointValidator).chargePointCheck(zeroPoint);
@@ -76,11 +89,15 @@ class PointChargeTest {
 
     @DisplayName("신규 유저의 포인트를 충전")
     @Test
-    void chargeTestById() {
+    void chargeTestById() throws InterruptedException {
         long id = 1L;
         long point = 100L;
 
         UserPoint expectUserPoint = new UserPoint(id, point, System.currentTimeMillis());
+
+        // lock 모킹
+        when(lockManager.getLock(anyString())).thenReturn(pointLock);
+        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
 
         when(userPointRepository.getUserPoint(id))
                 .thenReturn(UserPoint.empty(id));
@@ -95,12 +112,16 @@ class PointChargeTest {
 
     @DisplayName("이미 존재하는 유저의 포인트를 충전")
     @Test
-    void chargeTestByRId() {
+    void chargeTestByRId() throws InterruptedException {
         long id = 1L;
         long currentPoint = 100L;
         long extraChargeAmount = 200L;
 
         UserPoint alreadyUserPoint = new UserPoint(id, currentPoint, System.currentTimeMillis());
+
+        // lock 모킹
+        when(lockManager.getLock(anyString())).thenReturn(pointLock);
+        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
 
         long totalAmount = currentPoint + extraChargeAmount;
 
@@ -118,10 +139,14 @@ class PointChargeTest {
 
     @DisplayName("포인트를 충전할 때 충전 기록을 생성")
     @Test
-    void createPointChargeHistory() {
+    void createPointChargeHistory() throws InterruptedException {
         long id = 1L;
         long currentPoint = 100L;
         long extraChargeAmount = 200L;
+
+        // lock 모킹
+        when(lockManager.getLock(anyString())).thenReturn(pointLock);
+        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
 
         when(userPointRepository.getUserPoint(id))
                 .thenReturn(new UserPoint(id, currentPoint, System.currentTimeMillis()));
