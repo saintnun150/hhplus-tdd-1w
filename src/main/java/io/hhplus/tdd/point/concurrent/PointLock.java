@@ -6,6 +6,10 @@ import java.util.concurrent.locks.ReentrantLock;
 public class PointLock {
     private final ReentrantLock lock = new ReentrantLock();
 
+    public void lock() {
+        lock.lock();
+    }
+
     public boolean tryLock() {
         return lock.tryLock();
     }
@@ -20,5 +24,9 @@ public class PointLock {
 
     public void unlock() {
         lock.unlock();
+    }
+
+    public boolean isHeldByCurrentThread() {
+        return lock.isHeldByCurrentThread();
     }
 }

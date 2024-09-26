@@ -17,8 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.concurrent.TimeUnit;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -60,7 +58,7 @@ class PointUseTest {
 
         // lock 모킹
         when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
+        doNothing().when(pointLock).lock();
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
@@ -87,7 +85,7 @@ class PointUseTest {
 
         // lock 모킹
         when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
+        doNothing().when(pointLock).lock();
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
@@ -114,7 +112,7 @@ class PointUseTest {
 
         // lock 모킹
         when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
+        doNothing().when(pointLock).lock();
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
@@ -138,7 +136,7 @@ class PointUseTest {
 
         // lock 모킹
         when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
+        doNothing().when(pointLock).lock();
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));

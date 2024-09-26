@@ -17,8 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.concurrent.TimeUnit;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -56,6 +54,7 @@ class PointChargeTest {
 
         // lock 모킹
         when(lockManager.getLock(anyString())).thenReturn(pointLock);
+        doNothing().when(pointLock).lock();
 
         doThrow(new PointException(PointErrorCode.INVALID_POINT_AMOUNT))
                 .when(pointValidator).chargePointCheck(zeroPoint);
@@ -98,7 +97,7 @@ class PointChargeTest {
 
         // lock 모킹
         when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
+        doNothing().when(pointLock).lock();
 
         when(userPointRepository.getUserPoint(id))
                 .thenReturn(UserPoint.empty(id));
@@ -122,7 +121,7 @@ class PointChargeTest {
 
         // lock 모킹
         when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
+        doNothing().when(pointLock).lock();
 
         long totalAmount = currentPoint + extraChargeAmount;
 
@@ -147,7 +146,7 @@ class PointChargeTest {
 
         // lock 모킹
         when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        when(pointLock.tryLock(10, TimeUnit.MILLISECONDS)).thenReturn(true);
+        doNothing().when(pointLock).lock();
 
         when(userPointRepository.getUserPoint(id))
                 .thenReturn(new UserPoint(id, currentPoint, System.currentTimeMillis()));
