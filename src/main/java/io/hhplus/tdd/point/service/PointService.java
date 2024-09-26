@@ -1,8 +1,11 @@
 package io.hhplus.tdd.point.service;
 
-import io.hhplus.tdd.point.PointHistory;
-import io.hhplus.tdd.point.TransactionType;
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.domain.PointHistory;
+import io.hhplus.tdd.point.value.TransactionType;
+import io.hhplus.tdd.point.domain.UserPoint;
+import io.hhplus.tdd.point.concurrent.PointLock;
+import io.hhplus.tdd.point.concurrent.PointLockManager;
+import io.hhplus.tdd.point.constraint.PointValidator;
 import io.hhplus.tdd.point.repository.PointHistoryRepository;
 import io.hhplus.tdd.point.repository.UserPointRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,33 +21,43 @@ public class PointService {
     private final UserPointRepository userPointRepository;
     private final PointHistoryRepository pointHistoryRepository;
 
+    private final PointValidator pointValidator;
+    private final PointLockManager lockManager;
+
     public UserPoint chargePoint(long id, long amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("amount must be greater than 0");
+        String lockKey = "point-" + id;
+        PointLock pointLock = lockManager.getLock(lockKey);
+        pointLock.lock();
+        try {
+            // 충전 정책 체크
+            pointValidator.chargePointCheck(amount);
+            pointHistoryRepository.createPointHistory(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
+
+            UserPoint userPoint = userPointRepository.getUserPoint(id);
+            return userPointRepository.createOrUpdate(id, userPoint.point() + amount);
+        } finally {
+            if (pointLock.isHeldByCurrentThread()) {
+                pointLock.unlock();
+            }
         }
-
-        pointHistoryRepository.createPointHistory(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
-
-        UserPoint userPoint = userPointRepository.getUserPoint(id);
-        return userPointRepository.createOrUpdate(id, userPoint.point() + amount);
     }
 
     public UserPoint usePoint(long id, long amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("amount must be greater than 0");
+        String lockKey = "point-" + id;
+        PointLock pointLock = lockManager.getLock(lockKey);
+        pointLock.lock();
+        try {
+            UserPoint userPoint = userPointRepository.getUserPoint(id);
+            // 사용 정책 체크
+            pointValidator.usePointCheck(amount, userPoint.point());
+            pointHistoryRepository.createPointHistory(id, amount, TransactionType.USE, System.currentTimeMillis());
+            return userPointRepository.createOrUpdate(id, userPoint.point() - amount);
+        } finally {
+            if (pointLock.isHeldByCurrentThread()) {
+                pointLock.unlock();
+            }
         }
 
-        UserPoint userPoint = userPointRepository.getUserPoint(id);
-        if (userPoint.point() == 0) {
-            throw new IllegalStateException("current point is zero");
-        }
-        if (userPoint.point() < amount) {
-            throw new IllegalStateException("current point is less than amount");
-        }
-
-        pointHistoryRepository.createPointHistory(id, amount, TransactionType.USE, System.currentTimeMillis());
-
-        return userPointRepository.createOrUpdate(id, userPoint.point() - amount);
     }
 
     public UserPoint getUserPoint(long id) {
