@@ -1,6 +1,8 @@
-package io.hhplus.tdd.point;
+package io.hhplus.tdd.point.controller;
 
 import io.hhplus.tdd.common.ApiResponse;
+import io.hhplus.tdd.point.domain.PointHistory;
+import io.hhplus.tdd.point.domain.UserPoint;
 import io.hhplus.tdd.point.dto.PointDto;
 import io.hhplus.tdd.point.service.PointService;
 import lombok.RequiredArgsConstructor;

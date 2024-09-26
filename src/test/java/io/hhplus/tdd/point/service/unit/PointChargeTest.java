@@ -1,7 +1,7 @@
 package io.hhplus.tdd.point.service.unit;
 
-import io.hhplus.tdd.point.TransactionType;
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.value.TransactionType;
+import io.hhplus.tdd.point.domain.UserPoint;
 import io.hhplus.tdd.point.concurrent.PointLock;
 import io.hhplus.tdd.point.concurrent.PointLockManager;
 import io.hhplus.tdd.point.constraint.PointValidator;

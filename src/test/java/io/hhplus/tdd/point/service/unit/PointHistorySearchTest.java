@@ -1,6 +1,6 @@
 package io.hhplus.tdd.point.service.unit;
 
-import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.domain.PointHistory;
 import io.hhplus.tdd.point.repository.PointHistoryRepository;
 import io.hhplus.tdd.point.service.PointService;
 import org.junit.jupiter.api.DisplayName;
