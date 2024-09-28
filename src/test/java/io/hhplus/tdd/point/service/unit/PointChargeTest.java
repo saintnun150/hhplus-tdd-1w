@@ -17,6 +17,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.function.Supplier;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -36,9 +38,6 @@ class PointChargeTest {
     private PointValidator pointValidator;
 
     @Mock
-    private PointLock pointLock;
-
-    @Mock
     private PointLockManager lockManager;
 
     @InjectMocks
@@ -51,10 +50,6 @@ class PointChargeTest {
         long zeroPoint = 0;
         long negativePoint = -100;
         long limitedPoint = 20000;
-
-        // lock 모킹
-        when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        doNothing().when(pointLock).lock();
 
         doThrow(new PointException(PointErrorCode.INVALID_POINT_AMOUNT))
                 .when(pointValidator).chargePointCheck(zeroPoint);
@@ -96,8 +91,11 @@ class PointChargeTest {
         UserPoint expectUserPoint = new UserPoint(id, point, System.currentTimeMillis());
 
         // lock 모킹
-        when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        doNothing().when(pointLock).lock();
+        when(lockManager.executeWithLock(anyString(), any()))
+                .thenAnswer(answer -> {
+                    Supplier<UserPoint> action = answer.getArgument(1);
+                    return action.get();
+                });
 
         when(userPointRepository.getUserPoint(id))
                 .thenReturn(UserPoint.empty(id));
@@ -120,8 +118,11 @@ class PointChargeTest {
         UserPoint alreadyUserPoint = new UserPoint(id, currentPoint, System.currentTimeMillis());
 
         // lock 모킹
-        when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        doNothing().when(pointLock).lock();
+        when(lockManager.executeWithLock(anyString(), any()))
+                .thenAnswer(answer -> {
+                    Supplier<UserPoint> action = answer.getArgument(1);
+                    return action.get();
+                });
 
         long totalAmount = currentPoint + extraChargeAmount;
 
@@ -145,8 +146,11 @@ class PointChargeTest {
         long extraChargeAmount = 200L;
 
         // lock 모킹
-        when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        doNothing().when(pointLock).lock();
+        when(lockManager.executeWithLock(anyString(), any()))
+                .thenAnswer(answer -> {
+                    Supplier<UserPoint> action = answer.getArgument(1);
+                    return action.get();
+                });
 
         when(userPointRepository.getUserPoint(id))
                 .thenReturn(new UserPoint(id, currentPoint, System.currentTimeMillis()));
@@ -156,5 +160,4 @@ class PointChargeTest {
         // 충전 기록 호출 확인
         verify(pointHistoryRepository).createPointHistory(eq(id), eq(extraChargeAmount), eq(TransactionType.CHARGE), anyLong());
     }
-
 }

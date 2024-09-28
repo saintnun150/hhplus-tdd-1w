@@ -1,21 +1,22 @@
 package io.hhplus.tdd.point.service.unit;
 
-import io.hhplus.tdd.point.value.TransactionType;
-import io.hhplus.tdd.point.domain.UserPoint;
-import io.hhplus.tdd.point.concurrent.PointLock;
 import io.hhplus.tdd.point.concurrent.PointLockManager;
 import io.hhplus.tdd.point.constraint.PointValidator;
+import io.hhplus.tdd.point.domain.UserPoint;
 import io.hhplus.tdd.point.exception.PointErrorCode;
 import io.hhplus.tdd.point.exception.PointException;
 import io.hhplus.tdd.point.repository.PointHistoryRepository;
 import io.hhplus.tdd.point.repository.UserPointRepository;
 import io.hhplus.tdd.point.service.PointService;
+import io.hhplus.tdd.point.value.TransactionType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -41,9 +42,6 @@ class PointUseTest {
     private PointValidator pointValidator;
 
     @Mock
-    private PointLock pointLock;
-
-    @Mock
     private PointLockManager lockManager;
 
     @InjectMocks
@@ -57,8 +55,11 @@ class PointUseTest {
         long currentPoint = 50;
 
         // lock 모킹
-        when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        doNothing().when(pointLock).lock();
+        when(lockManager.executeWithLock(anyString(), any()))
+                .thenAnswer(answer -> {
+                    Supplier<UserPoint> action = answer.getArgument(1);
+                    return action.get();
+                });
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
@@ -84,8 +85,11 @@ class PointUseTest {
         long negativeAmount = -10;
 
         // lock 모킹
-        when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        doNothing().when(pointLock).lock();
+        when(lockManager.executeWithLock(anyString(), any()))
+                .thenAnswer(answer -> {
+                    Supplier<UserPoint> action = answer.getArgument(1);
+                    return action.get();
+                });
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
@@ -111,8 +115,11 @@ class PointUseTest {
         long remainPoint = 300;
 
         // lock 모킹
-        when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        doNothing().when(pointLock).lock();
+        when(lockManager.executeWithLock(anyString(), any()))
+                .thenAnswer(answer -> {
+                    Supplier<UserPoint> action = answer.getArgument(1);
+                    return action.get();
+                });
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
@@ -135,8 +142,11 @@ class PointUseTest {
         long remainPoint = 300;
 
         // lock 모킹
-        when(lockManager.getLock(anyString())).thenReturn(pointLock);
-        doNothing().when(pointLock).lock();
+        when(lockManager.executeWithLock(anyString(), any()))
+                .thenAnswer(answer -> {
+                    Supplier<UserPoint> action = answer.getArgument(1);
+                    return action.get();
+                });
 
         when(userPointRepository.getUserPoint(userId))
                 .thenReturn(new UserPoint(userId, currentPoint, System.currentTimeMillis()));
