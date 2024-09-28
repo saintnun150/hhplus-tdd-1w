@@ -3,14 +3,21 @@ package io.hhplus.tdd.point.concurrent;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 @Component
 public class PointLockManager {
-    protected ConcurrentHashMap<String, PointLock> lockMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, PointLock> lockMap = new ConcurrentHashMap<>();
 
-    public PointLock getLock(final String lockId) {
-        PointLock pointLock = lockMap.computeIfAbsent(lockId, k -> new PointLock());
-        return pointLock;
-
+    public <T> T executeWithLock(String lockId, Supplier<T> action) {
+        PointLock pointLock = lockMap.computeIfAbsent(lockId, key -> new PointLock());
+        pointLock.lock();
+        try {
+            return action.get();
+        } finally {
+            if (pointLock.isHeldByCurrentThread()) {
+                pointLock.unlock();
+            }
+        }
     }
 }
